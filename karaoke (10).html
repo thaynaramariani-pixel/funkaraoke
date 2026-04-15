@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎤 KaraokêTV</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-pink: #ff2d78;
+    --neon-cyan: #00f5ff;
+    --neon-yellow: #ffe600;
+    --neon-purple: #bf00ff;
+    --dark: #070714;
+    --dark2: #0d0d2b;
+    --glass: rgba(255,255,255,0.05);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    font-family: 'Nunito', sans-serif;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* BACKGROUND ANIMATED */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse at 20% 50%, #1a003a 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, #00163a 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, #1a001a 0%, transparent 60%),
+                var(--dark);
+  }
+  .bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* SCREENS */
+  .screen { position: relative; z-index: 10; width: 100%; height: 100vh; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* === MENU SCREEN === */
+  #menu {
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 14px;
+    gap: 0;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 8vw, 5rem);
+    letter-spacing: 6px;
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 2px;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(255,45,120,0.5));
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%,100% { filter: drop-shadow(0 0 20px rgba(255,45,120,0.5)); }
+    50% { filter: drop-shadow(0 0 40px rgba(0,245,255,0.7)); }
+  }
+
+  .subtitle {
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Search */
+  .search-wrap {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto 10px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 14px 50px 14px 20px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 50px;
+    color: #fff;
+    font-size: 1rem;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    transition: all 0.3s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--neon-cyan);
+    background: rgba(0,245,255,0.07);
+    box-shadow: 0 0 20px rgba(0,245,255,0.2);
+  }
+  .search-wrap .search-icon {
+    position: absolute; right: 18px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem; opacity: 0.5;
+  }
+
+  /* Category tabs */
+  .cats {
+    display: flex; gap: 6px;
+    max-width: 700px; margin: 0 auto 10px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .cat-btn {
+    padding: 5px 13px;
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.2s;
+  }
+  .cat-btn.active, .cat-btn:hover {
+    background: var(--neon-pink);
+    border-color: var(--neon-pink);
+    color: #fff;
+  }
+
+  /* Song grid */
+  .song-grid {
+    flex: 1;
+    overflow-y: auto;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+  .song-grid::-webkit-scrollbar { width: 4px; }
+  .song-grid::-webkit-scrollbar-thumb { background: var(--neon-pink); border-radius: 4px; }
+
+  .song-card {
+    background: var(--glass);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+  }
+  .song-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .song-card:hover::before, .song-card:active::before { opacity: 0.15; }
+  .song-card:hover, .song-card:active {
+    border-color: var(--neon-pink);
+    box-shadow: 0 6px 20px rgba(255,45,120,0.3);
+  }
+  .song-card > * { position: relative; z-index: 1; }
+
+  .song-emoji { font-size: 1.8rem; flex-shrink: 0; }
+  .song-info { flex: 1; min-width: 0; }
+  .song-title { font-weight: 900; font-size: 0.95rem; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-artist { font-size: 0.75rem; color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .song-tag {
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+    flex-shrink: 0;
+  }
+  .song-play-icon { font-size: 1.2rem; flex-shrink: 0; opacity: 0.4; }
+
+  /* === GAME SCREEN === */
+  #game {
+    display: none;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .now-playing {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .vinyl {
+    width: 44px; height: 44px;
+    background: conic-gradient(#1a1a1a 0deg, #333 60deg, #1a1a1a 120deg, #333 180deg, #1a1a1a 240deg, #333 300deg, #1a1a1a 360deg);
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.2);
+    animation: spin 3s linear infinite paused;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .vinyl::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    background: var(--neon-pink);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    box-shadow: 0 0 8px var(--neon-pink);
+  }
+  .vinyl.playing { animation-play-state: running; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .song-info-game h2 { font-size: 1rem; font-weight: 900; }
+  .song-info-game p { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+
+  /* Score */
+  .score-panel {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .score-box {
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 6px 14px;
+  }
+  .score-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--neon-yellow);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(255,230,0,0.7);
+    transition: all 0.3s;
+  }
+  .score-label { font-size: 0.6rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* Stars */
+  .stars { font-size: 1.2rem; }
+
+  /* Progress bar */
+  .progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.5s linear;
+    box-shadow: 0 0 10px var(--neon-cyan);
+  }
+
+  /* Lyrics area */
+  .lyrics-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lyric-prev {
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 16px;
+    font-weight: 700;
+    transition: all 0.5s;
+  }
+
+  .lyric-current {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
+    letter-spacing: 2px;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .lyric-words { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .lyric-word {
+    position: relative;
+    color: rgba(255,255,255,0.3);
+    transition: color 0.1s;
+  }
+  .lyric-word.sung {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px rgba(255,230,0,0.8);
+  }
+  .lyric-word.active {
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,255,255,0.9);
+  }
+
+  .lyric-next {
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    color: rgba(255,255,255,0.25);
+    font-weight: 700;
+    transition: all 0.5s;
+  }
+
+  /* Mic visualizer */
+  .mic-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .mic-btn {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(255,45,120,0.5);
+  }
+  .mic-btn:hover { transform: scale(1.1); }
+  .mic-btn.muted { background: rgba(255,255,255,0.1); box-shadow: none; }
+
+  .bars {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 36px;
+  }
+  .bar {
+    width: 4px;
+    background: linear-gradient(to top, var(--neon-pink), var(--neon-cyan));
+    border-radius: 2px;
+    animation: barAnim 0.6s ease-in-out infinite alternate;
+    min-height: 4px;
+  }
+  .bar:nth-child(1) { animation-delay: 0s; }
+  .bar:nth-child(2) { animation-delay: 0.1s; }
+  .bar:nth-child(3) { animation-delay: 0.2s; }
+  .bar:nth-child(4) { animation-delay: 0.15s; }
+  .bar:nth-child(5) { animation-delay: 0.05s; }
+  .bar:nth-child(6) { animation-delay: 0.25s; }
+  .bar:nth-child(7) { animation-delay: 0.1s; }
+  .bar:nth-child(8) { animation-delay: 0.3s; }
+  @keyframes barAnim {
+    from { height: 4px; }
+    to { height: var(--h, 20px); }
+  }
+  .bars.paused .bar { animation-play-state: paused; height: 4px; }
+
+  /* Controls */
+  .game-controls {
+    display: flex; gap: 10px; justify-content: center;
+    margin-top: 10px;
+  }
+  .ctrl-btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.15); }
+  .ctrl-btn.primary {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(255,45,120,0.4);
+  }
+
+  /* Note feedback */
+  .note-feedback {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    pointer-events: none;
+    animation: notePop 1s forwards;
+    z-index: 100;
+  }
+  @keyframes notePop {
+    0% { opacity: 1; transform: translateY(0) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-40px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1); }
+  }
+
+  /* === RESULT SCREEN === */
+  #result {
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .result-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .result-grade {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--neon-yellow), var(--neon-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px rgba(255,230,0,0.5));
+    animation: gradeIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+  @keyframes gradeIn {
+    from { transform: scale(0) rotate(-20deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+  }
+
+  .result-stars { font-size: 2.5rem; margin: 10px 0; }
+  .result-score { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--neon-cyan); }
+  .result-msg { color: rgba(255,255,255,0.6); margin: 10px 0 20px; }
+
+  .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* Fireworks */
+  .firework {
+    position: fixed;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    animation: fw 1s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes fw {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  /* Countdown */
+  .countdown {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(7,7,20,0.95);
+  }
+  .countdown-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15rem;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: cdPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes cdPop {
+    0% { transform: scale(2); opacity: 0; }
+    50% { transform: scale(0.9); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Pitch indicator */
+  .pitch-bar-wrap {
+    width: 12px;
+    height: 120px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .pitch-fill {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, var(--neon-pink), var(--neon-cyan));
+    transition: height 0.1s;
+    border-radius: 6px;
+  }
+
+  /* Sync controls */
+  .sync-controls {
+    text-align: center;
+    padding: 6px 0 2px;
+  }
+  .sync-btn {
+    padding: 5px 10px;
+    border-radius: 50px;
+    border: 1px solid rgba(0,245,255,0.3);
+    background: rgba(0,245,255,0.08);
+    color: var(--neon-cyan);
+    font-size: 0.72rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sync-btn:hover, .sync-btn:active {
+    background: rgba(0,245,255,0.2);
+    border-color: var(--neon-cyan);
+  }
+
+  /* Timer ring */
+  .timer-ring {
+    position: relative;
+    width: 48px; height: 48px;
+  }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle { fill: none; stroke-width: 3; }
+  .ring-bg { stroke: rgba(255,255,255,0.1); }
+  .ring-fill { stroke: var(--neon-cyan); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .timer-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-cyan);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- MENU SCREEN -->
+<div id="menu" class="screen active">
+  <div class="logo">🎤 KaraokêTV</div>
+  <div class="subtitle">Escolha sua música e brilhe!</div>
+
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Buscar música ou artista..." oninput="filterSongs()">
+    <span class="search-icon">🔍</span>
+  </div>
+
+  <div class="cats">
+    <button class="cat-btn active" onclick="filterAll(this)">🎵 Todas</button>
+    <button class="cat-btn" onclick="filterLang('pt', this)">🇧🇷 Português</button>
+    <button class="cat-btn" onclick="filterLang('en', this)">🇺🇸 English</button>
+    <button class="cat-btn" onclick="filterLang('es', this)">🇪🇸 Español</button>
+    <button class="cat-btn" onclick="filterCat('pop', this)">💃 Pop</button>
+    <button class="cat-btn" onclick="filterCat('rock', this)">🎸 Rock</button>
+    <button class="cat-btn" onclick="filterCat('rb', this)">🔥 R&amp;B</button>
+    <button class="cat-btn" onclick="filterCat('sertanejo', this)">🤠 Sertanejo</button>
+    <button class="cat-btn" onclick="filterCat('funk', this)">🎺 Funk</button>
+  </div>
+
+  <div class="song-grid" id="songGrid"></div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game" class="screen">
+  <div class="game-header">
+    <div class="now-playing">
+      <div class="vinyl" id="vinyl"></div>
+      <div class="song-info-game">
+        <h2 id="gameSongTitle">–</h2>
+        <p id="gameSongArtist">–</p>
+      </div>
+    </div>
+
+    <div class="score-panel">
+      <div class="pitch-bar-wrap">
+        <div class="pitch-fill" id="pitchFill" style="height:30%"></div>
+      </div>
+      <div>
+        <div class="score-box">
+          <div class="score-val" id="scoreVal">0</div>
+          <div class="score-label">Pontos</div>
+        </div>
+        <div class="stars" id="starsDisplay">⭐⭐⭐</div>
+      </div>
+      <div class="timer-ring">
+        <svg width="48" height="48">
+          <circle class="ring-bg" cx="24" cy="24" r="20"/>
+          <circle class="ring-fill" id="timerRing" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-text" id="timerText">–</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="lyrics-stage" id="lyricsStage">
+    <div class="lyric-prev" id="lyricPrev"></div>
+    <div class="lyric-current">
+      <div class="lyric-words" id="lyricCurrent"></div>
+    </div>
+    <div class="lyric-next" id="lyricNext"></div>
+  </div>
+
+  <div class="mic-area">
+    <div class="pitch-bar-wrap" style="width:8px; height:48px;">
+      <div class="pitch-fill" id="pitchFill2" style="height:40%"></div>
+    </div>
+    <div class="bars" id="bars">
+      <div class="bar" style="--h:28px"></div>
+      <div class="bar" style="--h:18px"></div>
+      <div class="bar" style="--h:35px"></div>
+      <div class="bar" style="--h:22px"></div>
+      <div class="bar" style="--h:30px"></div>
+      <div class="bar" style="--h:15px"></div>
+      <div class="bar" style="--h:25px"></div>
+      <div class="bar" style="--h:20px"></div>
+    </div>
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+  </div>
+
+  <div class="game-controls">
+    <button class="ctrl-btn" onclick="goToMenu()">← Voltar</button>
+    <button class="ctrl-btn primary" id="playPauseBtn" onclick="togglePlay()">▶ Iniciar</button>
+    <button class="ctrl-btn" onclick="restartSong()">↺ Reiniciar</button>
+  </div>
+
+  <div class="sync-controls">
+    <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;">Sincronizar letra</span>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+      <button class="sync-btn" onclick="adjustSync(-2)">⏪ -2s</button>
+      <button class="sync-btn" onclick="adjustSync(-1)">◀ -1s</button>
+      <span id="syncVal" style="font-size:0.75rem;color:var(--neon-cyan);min-width:40px;text-align:center;">0s</span>
+      <button class="sync-btn" onclick="adjustSync(1)">+1s ▶</button>
+      <button class="sync-btn" onclick="adjustSync(2)">+2s ⏩</button>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube Player (hidden, audio only) -->
+<div id="ytWrapper" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;">
+  <div id="ytPlayer"></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result" class="screen">
+  <div class="result-card">
+    <div class="result-grade" id="resultGrade">A+</div>
+    <div class="result-stars" id="resultStars">⭐⭐⭐⭐⭐</div>
+    <div class="result-score" id="resultScore">9850</div>
+    <div class="result-msg" id="resultMsg">Incrível! Você arrasou!</div>
+    <div class="result-btns">
+      <button class="ctrl-btn primary" onclick="restartFromResult()">🔄 Tentar Novamente</button>
+      <button class="ctrl-btn" onclick="goToMenu()">🎵 Escolher Música</button>
+    </div>
+  </div>
+</div>
+
+<!-- Countdown overlay -->
+<div class="countdown" id="countdown" style="display:none">
+  <div class="countdown-num" id="countdownNum">3</div>
+</div>
+
+<script>
+// ============ SONGS DATABASE ============
+const SONGS = [
+  {
+    id: 1, emoji: '🌹', title: 'I Will Always Love You', artist: 'Whitney Houston', decade: '90s',
+    cat: 'rb', lang: 'en', bpm: 68, duration: 65, ytId: 'WNIPqafd4As',
+    lyrics: [
+      { time: 0,  line: 'If I should stay',                      next: 'I would only be in your way' },
+      { time: 5,  line: 'I would only be in your way',           next: 'So I\'ll go, but I know' },
+      { time: 10, line: 'So I\'ll go, but I know',               next: 'I\'ll think of you every step of the way' },
+      { time: 15, line: 'I\'ll think of you every step of the way', next: 'And I will always love you' },
+      { time: 20, line: 'And I will always love you',            next: 'I will always love you' },
+      { time: 25, line: 'I will always love you',                next: 'You, my darling you' },
+      { time: 30, line: 'You, my darling you',                   next: 'Bittersweet memories' },
+      { time: 35, line: 'Bittersweet memories',                  next: 'That\'s all I\'m taking with me' },
+      { time: 40, line: 'That\'s all I\'m taking with me',       next: 'Goodbye, please don\'t cry' },
+      { time: 45, line: 'Goodbye, please don\'t cry',            next: 'We both know I\'m not what you need' },
+      { time: 50, line: 'We both know I\'m not what you need',   next: 'And I will always love you' },
+      { time: 55, line: 'And I will always love you',            next: '' },
+      { time: 60, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 2, emoji: '🎸', title: 'Smells Like Teen Spirit', artist: 'Nirvana', decade: '90s',
+    cat: 'rock', lang: 'en', bpm: 117, duration: 60, ytId: 'hTWKbfoikeg',
+    lyrics: [
+      { time: 0,  line: 'Load up on guns, bring your friends',   next: 'It\'s fun to lose and to pretend' },
+      { time: 5,  line: 'It\'s fun to lose and to pretend',      next: 'She\'s over-bored and self-assured' },
+      { time: 10, line: 'She\'s over-bored and self-assured',    next: 'Oh no, I know a dirty word' },
+      { time: 15, line: 'Oh no, I know a dirty word',            next: 'Hello, hello, hello, how low' },
+      { time: 20, line: 'Hello, hello, hello, how low',          next: 'Hello, hello, hello' },
+      { time: 25, line: 'Hello, hello, hello',                   next: 'With the lights out it\'s less dangerous' },
+      { time: 30, line: 'With the lights out it\'s less dangerous', next: 'Here we are now, entertain us' },
+      { time: 35, line: 'Here we are now, entertain us',         next: 'I feel stupid and contagious' },
+      { time: 40, line: 'I feel stupid and contagious',          next: 'Here we are now, entertain us' },
+      { time: 45, line: 'Here we are now, entertain us',         next: 'A mulatto, an albino' },
+      { time: 50, line: 'A mulatto, an albino',                  next: 'A mosquito, my libido' },
+      { time: 55, line: 'A mosquito, my libido',                 next: '' },
+      { time: 58, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 3, emoji: '💃', title: 'Baby One More Time', artist: 'Britney Spears', decade: '90s',
+    cat: 'pop', lang: 'en', bpm: 99, duration: 60, ytId: 'C-u5WLJ9Yk4',
+    lyrics: [
+      { time: 0,  line: 'Oh baby, baby',                         next: 'How was I supposed to know' },
+      { time: 5,  line: 'How was I supposed to know',            next: 'That something wasn\'t right here' },
+      { time: 10, line: 'That something wasn\'t right here',     next: 'Oh baby, baby' },
+      { time: 15, line: 'Oh baby, baby',                         next: 'I shouldn\'t have let you go' },
+      { time: 20, line: 'I shouldn\'t have let you go',          next: 'And now you\'re out of sight' },
+      { time: 25, line: 'And now you\'re out of sight',          next: 'My loneliness is killing me' },
+      { time: 30, line: 'My loneliness is killing me',           next: 'I must confess I still believe' },
+      { time: 35, line: 'I must confess I still believe',        next: 'When I\'m not with you I lose my mind' },
+      { time: 40, line: 'When I\'m not with you I lose my mind', next: 'Give me a sign' },
+      { time: 45, line: 'Give me a sign',                        next: 'Hit me baby one more time' },
+      { time: 50, line: 'Hit me baby one more time',             next: '' },
+      { time: 55, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 4, emoji: '🌊', title: 'Waterfalls', artist: 'TLC', decade: '90s',
+    cat: 'rb', lang: 'en', bpm: 95, duration: 60, ytId: '8WEtxJ4-sh4',
+    lyrics: [
+      { time: 0,  line: 'A lonely mother gazing out of her window', next: 'Staring at a son that she just can\'t touch' },
+      { time: 6,  line: 'Staring at a son that she just can\'t touch', next: 'If at any time he\'s in a jam' },
+      { time: 12, line: 'If at any time he\'s in a jam',         next: 'She\'ll be by his side' },
+      { time: 17, line: 'She\'ll be by his side',                next: 'But he doesn\'t realize he hurts her so much' },
+      { time: 22, line: 'But he doesn\'t realize he hurts her so much', next: 'Please stick to the rivers and the lakes' },
+      { time: 28, line: 'Please stick to the rivers and the lakes', next: 'That you\'re used to' },
+      { time: 33, line: 'That you\'re used to',                  next: 'I know that you\'re gonna have it your way' },
+      { time: 38, line: 'I know that you\'re gonna have it your way', next: 'Or nothing at all' },
+      { time: 43, line: 'Or nothing at all',                     next: 'But I think you\'re moving too fast' },
+      { time: 48, line: 'But I think you\'re moving too fast',   next: '' },
+      { time: 55, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 5, emoji: '💔', title: 'My Heart Will Go On', artist: 'Celine Dion', decade: '90s',
+    cat: 'pop', lang: 'en', bpm: 63, duration: 65, ytId: 'DrCD1wyK2os',
+    lyrics: [
+      { time: 0,  line: 'Every night in my dreams',              next: 'I see you, I feel you' },
+      { time: 5,  line: 'I see you, I feel you',                 next: 'That is how I know you go on' },
+      { time: 10, line: 'That is how I know you go on',          next: 'Far across the distance' },
+      { time: 15, line: 'Far across the distance',               next: 'And spaces between us' },
+      { time: 20, line: 'And spaces between us',                 next: 'You have come to show you go on' },
+      { time: 25, line: 'You have come to show you go on',       next: 'Near, far, wherever you are' },
+      { time: 30, line: 'Near, far, wherever you are',           next: 'I believe that the heart does go on' },
+      { time: 35, line: 'I believe that the heart does go on',   next: 'Once more you open the door' },
+      { time: 40, line: 'Once more you open the door',           next: 'And you\'re here in my heart' },
+      { time: 45, line: 'And you\'re here in my heart',          next: 'And my heart will go on and on' },
+      { time: 50, line: 'And my heart will go on and on',        next: '' },
+      { time: 58, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 6, emoji: '🔔', title: 'In the End', artist: 'Linkin Park', decade: '2000s',
+    cat: 'rock', lang: 'en', bpm: 105, duration: 60, ytId: 'eVTXPUF4Oz4',
+    lyrics: [
+      { time: 0,  line: 'It starts with one thing',              next: 'I don\'t know why' },
+      { time: 5,  line: 'I don\'t know why',                     next: 'It doesn\'t even matter how hard you try' },
+      { time: 10, line: 'It doesn\'t even matter how hard you try', next: 'Keep that in mind' },
+      { time: 15, line: 'Keep that in mind',                     next: 'I designed this rhyme' },
+      { time: 20, line: 'I designed this rhyme',                 next: 'To explain in due time' },
+      { time: 25, line: 'To explain in due time',                next: 'All I know' },
+      { time: 30, line: 'All I know',                            next: 'Time is a valuable thing' },
+      { time: 35, line: 'Time is a valuable thing',              next: 'Watch it fly by as the pendulum swings' },
+      { time: 40, line: 'Watch it fly by as the pendulum swings', next: 'Watch it count down to the end of the day' },
+      { time: 45, line: 'Watch it count down to the end of the day', next: 'The clock ticks life away' },
+      { time: 50, line: 'The clock ticks life away',             next: 'It\'s so unreal' },
+      { time: 55, line: 'It\'s so unreal',                       next: '' },
+      { time: 58, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 7, emoji: '🎉', title: 'Yeah!', artist: 'Usher ft. Lil Jon & Ludacris', decade: '2000s',
+    cat: 'rb', lang: 'en', bpm: 105, duration: 60, ytId: 'GxBSyx85Kp8',
+    lyrics: [
+      { time: 0,  line: 'Peace up, A-town down',                 next: 'Yeah, okay' },
+      { time: 5,  line: 'Yeah, okay',                            next: 'Usher, yeah' },
+      { time: 10, line: 'Usher, yeah',                           next: 'Lil Jon' },
+      { time: 15, line: 'Lil Jon',                               next: 'Yeah, yeah, yeah' },
+      { time: 20, line: 'Yeah, yeah, yeah',                      next: 'Up in the club with my homies' },
+      { time: 25, line: 'Up in the club with my homies',         next: 'Trying to get a little V-I' },
+      { time: 30, line: 'Trying to get a little V-I',            next: 'Keep it down on the low key' },
+      { time: 35, line: 'Keep it down on the low key',           next: 'You should know how it feels' },
+      { time: 40, line: 'You should know how it feels',          next: 'I saw this shorty, she was checking up on me' },
+      { time: 45, line: 'I saw this shorty, she was checking up on me', next: 'From the game she was spitting in my ear' },
+      { time: 50, line: 'From the game she was spitting in my ear', next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 8, emoji: '🕺', title: 'Crazy in Love', artist: 'Beyoncé ft. Jay-Z', decade: '2000s',
+    cat: 'rb', lang: 'en', bpm: 99, duration: 60, ytId: 'ViwtNLUqkMY',
+    lyrics: [
+      { time: 0,  line: 'I look and stare so deep in your eyes', next: 'I touch on you more and more every time' },
+      { time: 6,  line: 'I touch on you more and more every time', next: 'When you leave I\'m begging you not to go' },
+      { time: 12, line: 'When you leave I\'m begging you not to go', next: 'Call your name two or three times in a row' },
+      { time: 18, line: 'Call your name two or three times in a row', next: 'Such a funny thing for me to try to explain' },
+      { time: 24, line: 'Such a funny thing for me to try to explain', next: 'How I\'m feeling and my pride is the one to blame' },
+      { time: 30, line: 'How I\'m feeling and my pride is the one to blame', next: 'I know I don\'t understand' },
+      { time: 36, line: 'I know I don\'t understand',            next: 'Just how your love can do what no one else can' },
+      { time: 41, line: 'Just how your love can do what no one else can', next: 'Got me looking so crazy right now' },
+      { time: 46, line: 'Got me looking so crazy right now',     next: 'Your love\'s got me looking so crazy right now' },
+      { time: 51, line: 'Your love\'s got me looking so crazy right now', next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 9, emoji: '🌟', title: 'Beautiful Day', artist: 'U2', decade: '2000s',
+    cat: 'rock', lang: 'en', bpm: 136, duration: 60, ytId: 'co6WMzDOh1o',
+    lyrics: [
+      { time: 0,  line: 'The heart is a bloom',                  next: 'Shoots up through the stony ground' },
+      { time: 5,  line: 'Shoots up through the stony ground',    next: 'But there\'s no room' },
+      { time: 10, line: 'But there\'s no room',                  next: 'No space to rent in this town' },
+      { time: 15, line: 'No space to rent in this town',         next: 'You\'re out of luck' },
+      { time: 20, line: 'You\'re out of luck',                   next: 'And the reason that you had to care' },
+      { time: 25, line: 'And the reason that you had to care',   next: 'The traffic is stuck' },
+      { time: 30, line: 'The traffic is stuck',                  next: 'And you\'re not moving anywhere' },
+      { time: 35, line: 'And you\'re not moving anywhere',       next: 'It\'s a beautiful day' },
+      { time: 40, line: 'It\'s a beautiful day',                 next: 'Don\'t let it get away' },
+      { time: 45, line: 'Don\'t let it get away',                next: 'It\'s a beautiful day' },
+      { time: 50, line: 'It\'s a beautiful day',                 next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 10, emoji: '🔥', title: 'Bad Romance', artist: 'Lady Gaga', decade: '2000s',
+    cat: 'pop', lang: 'en', bpm: 119, duration: 60, ytId: 'qrO4YZeyl0I',
+    lyrics: [
+      { time: 0,  line: 'I want your ugly, I want your disease', next: 'I want your everything as long as it\'s free' },
+      { time: 6,  line: 'I want your everything as long as it\'s free', next: 'I want your love' },
+      { time: 12, line: 'I want your love',                      next: 'Love love love, I want your love' },
+      { time: 17, line: 'Love love love, I want your love',      next: 'I want your drama' },
+      { time: 22, line: 'I want your drama',                     next: 'The touch of your hand' },
+      { time: 27, line: 'The touch of your hand',                next: 'I want your leather-studded kiss in the sand' },
+      { time: 32, line: 'I want your leather-studded kiss in the sand', next: 'I want your love' },
+      { time: 37, line: 'I want your love',                      next: 'Love love love, I want your love' },
+      { time: 42, line: 'Love love love, I want your love',      next: 'You know that I want you' },
+      { time: 47, line: 'You know that I want you',              next: 'And you know that I need you' },
+      { time: 52, line: 'And you know that I need you',          next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 11, emoji: '💜', title: 'Rolling in the Deep', artist: 'Adele', decade: '2010s',
+    cat: 'pop', lang: 'en', bpm: 105, duration: 60, ytId: 'rYEDA3JcQqw',
+    lyrics: [
+      { time: 0,  line: 'There\'s a fire starting in my heart', next: 'Reaching a fever pitch' },
+      { time: 6,  line: 'Reaching a fever pitch',               next: 'And it\'s bringing me out the dark' },
+      { time: 11, line: 'And it\'s bringing me out the dark',   next: 'Finally I can see you crystal clear' },
+      { time: 16, line: 'Finally I can see you crystal clear',  next: 'Go ahead and sell me out' },
+      { time: 21, line: 'Go ahead and sell me out',             next: 'And I\'ll lay your ship bare' },
+      { time: 26, line: 'And I\'ll lay your ship bare',         next: 'We could have had it all' },
+      { time: 31, line: 'We could have had it all',             next: 'Rolling in the deep' },
+      { time: 36, line: 'Rolling in the deep',                  next: 'You had my heart inside of your hand' },
+      { time: 41, line: 'You had my heart inside of your hand', next: 'And you played it to the beat' },
+      { time: 46, line: 'And you played it to the beat',        next: 'We could have had it all' },
+      { time: 51, line: 'We could have had it all',             next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 12, emoji: '🎤', title: 'Shape of You', artist: 'Ed Sheeran', decade: '2010s',
+    cat: 'pop', lang: 'en', bpm: 96, duration: 60, ytId: 'JGwWNGJdvx8',
+    lyrics: [
+      { time: 0,  line: 'The club isn\'t the best place to find a lover', next: 'So the bar is where I go' },
+      { time: 6,  line: 'So the bar is where I go',             next: 'Me and my friends at the table doing shots' },
+      { time: 11, line: 'Me and my friends at the table doing shots', next: 'Drinking fast and then we talk slow' },
+      { time: 16, line: 'Drinking fast and then we talk slow',  next: 'Come over and start up a conversation with just me' },
+      { time: 22, line: 'Come over and start up a conversation with just me', next: 'And trust me I\'ll give it a chance now' },
+      { time: 28, line: 'And trust me I\'ll give it a chance now', next: 'Take my hand, stop, put Van the Man on the jukebox' },
+      { time: 34, line: 'Take my hand, stop, put Van the Man on the jukebox', next: 'And then we start to dance' },
+      { time: 40, line: 'And then we start to dance',           next: 'I\'m in love with the shape of you' },
+      { time: 45, line: 'I\'m in love with the shape of you',  next: 'We push and pull like a magnet do' },
+      { time: 50, line: 'We push and pull like a magnet do',   next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 13, emoji: '🌈', title: 'Happy', artist: 'Pharrell Williams', decade: '2010s',
+    cat: 'pop', lang: 'en', bpm: 160, duration: 60, ytId: 'ZbZSe6N_BXs',
+    lyrics: [
+      { time: 0,  line: 'It might seem crazy what I\'m \'bout to say', next: 'Sunshine she\'s here, you can take a break' },
+      { time: 6,  line: 'Sunshine she\'s here, you can take a break', next: 'I\'m a hot air balloon that could go to space' },
+      { time: 12, line: 'I\'m a hot air balloon that could go to space', next: 'With the air, like I don\'t care baby by the way' },
+      { time: 18, line: 'With the air, like I don\'t care baby by the way', next: 'Because I\'m happy' },
+      { time: 24, line: 'Because I\'m happy',                   next: 'Clap along if you feel like a room without a roof' },
+      { time: 29, line: 'Clap along if you feel like a room without a roof', next: 'Because I\'m happy' },
+      { time: 35, line: 'Because I\'m happy',                   next: 'Clap along if you feel like happiness is the truth' },
+      { time: 40, line: 'Clap along if you feel like happiness is the truth', next: 'Because I\'m happy' },
+      { time: 46, line: 'Because I\'m happy',                   next: 'Clap along if you know what happiness is to you' },
+      { time: 51, line: 'Clap along if you know what happiness is to you', next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 14, emoji: '👑', title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', decade: '2010s',
+    cat: 'rb', lang: 'en', bpm: 115, duration: 60, ytId: 'OPf0YbXqDm0',
+    lyrics: [
+      { time: 0,  line: 'This hit, that ice cold',              next: 'Michelle Pfeiffer that white gold' },
+      { time: 5,  line: 'Michelle Pfeiffer that white gold',    next: 'This one, for them hood girls' },
+      { time: 10, line: 'This one, for them hood girls',        next: 'Them good girls, straight masterpieces' },
+      { time: 15, line: 'Them good girls, straight masterpieces', next: 'Stylin\', while in' },
+      { time: 20, line: 'Stylin\', while in',                   next: 'Living it up in the city' },
+      { time: 25, line: 'Living it up in the city',             next: 'Got Chucks on with Saint Laurent' },
+      { time: 30, line: 'Got Chucks on with Saint Laurent',     next: 'Gotta kiss myself I\'m so pretty' },
+      { time: 35, line: 'Gotta kiss myself I\'m so pretty',    next: 'I\'m too hot, call the police and the fireman' },
+      { time: 40, line: 'I\'m too hot, call the police and the fireman', next: 'I\'m too hot, make a dragon wanna retire man' },
+      { time: 45, line: 'I\'m too hot, make a dragon wanna retire man', next: 'Uptown funk you up' },
+      { time: 50, line: 'Uptown funk you up',                   next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 15, emoji: '🦋', title: 'Stay With Me', artist: 'Sam Smith', decade: '2010s',
+    cat: 'pop', lang: 'en', bpm: 84, duration: 60, ytId: 'pB-5XG-DbAA',
+    lyrics: [
+      { time: 0,  line: 'Guess it\'s true, I\'m not good at a one-night stand', next: 'But I still need love \'cause I\'m just a man' },
+      { time: 6,  line: 'But I still need love \'cause I\'m just a man', next: 'These nights never seem to go to plan' },
+      { time: 12, line: 'These nights never seem to go to plan', next: 'I don\'t want you to leave, will you hold my hand?' },
+      { time: 18, line: 'I don\'t want you to leave, will you hold my hand?', next: 'Oh, won\'t you stay with me?' },
+      { time: 24, line: 'Oh, won\'t you stay with me?',         next: '\'Cause you\'re all I need' },
+      { time: 29, line: '\'Cause you\'re all I need',           next: 'This ain\'t love it\'s clear to see' },
+      { time: 34, line: 'This ain\'t love it\'s clear to see',  next: 'But darling, stay with me' },
+      { time: 40, line: 'But darling, stay with me',            next: 'Oh, won\'t you stay with me?' },
+      { time: 45, line: 'Oh, won\'t you stay with me?',         next: '\'Cause you\'re all I need' },
+      { time: 50, line: '\'Cause you\'re all I need',           next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 16, emoji: '🌙', title: 'Blinding Lights', artist: 'The Weeknd', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 171, duration: 60, ytId: '4NRXx6U8ABQ',
+    lyrics: [
+      { time: 0,  line: 'I\'ve been tryna call',                next: 'I\'ve been on my own for long enough' },
+      { time: 5,  line: 'I\'ve been on my own for long enough', next: 'Maybe you can show me how to love, maybe' },
+      { time: 11, line: 'Maybe you can show me how to love, maybe', next: 'I\'m going through withdrawals' },
+      { time: 16, line: 'I\'m going through withdrawals',       next: 'You don\'t even have to do too much' },
+      { time: 21, line: 'You don\'t even have to do too much',  next: 'You can turn me on with just a touch, baby' },
+      { time: 27, line: 'You can turn me on with just a touch, baby', next: 'I look around and Sin City\'s cold and empty' },
+      { time: 33, line: 'I look around and Sin City\'s cold and empty', next: 'No one\'s around to judge me' },
+      { time: 39, line: 'No one\'s around to judge me',         next: 'I can\'t see clearly when you\'re gone' },
+      { time: 44, line: 'I can\'t see clearly when you\'re gone', next: 'I said, ooh, I\'m blinded by the lights' },
+      { time: 50, line: 'I said, ooh, I\'m blinded by the lights', next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 17, emoji: '💫', title: 'Levitating', artist: 'Dua Lipa', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 103, duration: 60, ytId: 'TUVcZfQe-Kw',
+    lyrics: [
+      { time: 0,  line: 'If you wanna run away with me',        next: 'I know a galaxy and I can take you for a ride' },
+      { time: 6,  line: 'I know a galaxy and I can take you for a ride', next: 'I had a premonition that we fell into a rhythm' },
+      { time: 12, line: 'I had a premonition that we fell into a rhythm', next: 'Where the music don\'t stop for life' },
+      { time: 18, line: 'Where the music don\'t stop for life', next: 'Glitter in the sky, glitter in my eyes' },
+      { time: 23, line: 'Glitter in the sky, glitter in my eyes', next: 'Shining just the way I like' },
+      { time: 28, line: 'Shining just the way I like',          next: 'If you\'re feeling like you need a little lover' },
+      { time: 33, line: 'If you\'re feeling like you need a little lover', next: 'Think of me, touching your fingers' },
+      { time: 39, line: 'Think of me, touching your fingers',   next: 'I\'m levitating' },
+      { time: 44, line: 'I\'m levitating',                      next: 'The Milky Way, we\'re renegading' },
+      { time: 49, line: 'The Milky Way, we\'re renegading',    next: 'Yeah, yeah, yeah, yeah, yeah' },
+      { time: 54, line: 'Yeah, yeah, yeah, yeah, yeah',         next: '' },
+      { time: 58, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 18, emoji: '🐍', title: 'Anti-Hero', artist: 'Taylor Swift', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 97, duration: 60, ytId: 'b1kbLwvqugk',
+    lyrics: [
+      { time: 0,  line: 'I have this thing where I get older', next: 'But just never wiser' },
+      { time: 5,  line: 'But just never wiser',                 next: 'Midnights become my afternoons' },
+      { time: 10, line: 'Midnights become my afternoons',       next: 'When my depression works the graveyard shift' },
+      { time: 15, line: 'When my depression works the graveyard shift', next: 'All of the people I\'ve ghosted stand there in the room' },
+      { time: 21, line: 'All of the people I\'ve ghosted stand there in the room', next: 'I should not be left to my own devices' },
+      { time: 27, line: 'I should not be left to my own devices', next: 'They come with prices and vices' },
+      { time: 32, line: 'They come with prices and vices',      next: 'I end up in crisis' },
+      { time: 37, line: 'I end up in crisis',                   next: 'Tale as old as time' },
+      { time: 42, line: 'Tale as old as time',                  next: 'It\'s me, hi, I\'m the problem, it\'s me' },
+      { time: 47, line: 'It\'s me, hi, I\'m the problem, it\'s me', next: 'At tea time, everybody agrees' },
+      { time: 52, line: 'At tea time, everybody agrees',        next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 19, emoji: '🦁', title: 'As It Was', artist: 'Harry Styles', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 174, duration: 60, ytId: 'H5v3kku4y6Q',
+    lyrics: [
+      { time: 0,  line: 'Holding me back',                      next: 'Gravity\'s holding me back' },
+      { time: 5,  line: 'Gravity\'s holding me back',           next: 'I want you to hold out the palm of your hand' },
+      { time: 10, line: 'I want you to hold out the palm of your hand', next: 'Why don\'t we leave it at that' },
+      { time: 16, line: 'Why don\'t we leave it at that',       next: 'Nothing to say when everything gets in the way' },
+      { time: 21, line: 'Nothing to say when everything gets in the way', next: 'Seems you cannot be replaced' },
+      { time: 27, line: 'Seems you cannot be replaced',         next: 'And I\'m the one who will stay' },
+      { time: 32, line: 'And I\'m the one who will stay',       next: 'In this world, it\'s just us' },
+      { time: 37, line: 'In this world, it\'s just us',         next: 'You know it\'s not the same as it was' },
+      { time: 42, line: 'You know it\'s not the same as it was', next: 'In this world, it\'s just us' },
+      { time: 47, line: 'In this world, it\'s just us',         next: 'You know it\'s not the same as it was' },
+      { time: 52, line: 'You know it\'s not the same as it was', next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 20, emoji: '🎶', title: 'Flowers', artist: 'Miley Cyrus', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 118, duration: 60, ytId: 'G7KNmW9a75Y', ytStart: 0,
+    lyrics: [
+      { time: 0,  line: 'We were good, we were gold',           next: 'Kind of dream that can\'t be sold' },
+      { time: 6,  line: 'Kind of dream that can\'t be sold',    next: 'We were right till we weren\'t' },
+      { time: 11, line: 'We were right till we weren\'t',       next: 'Built a home and watched it burn' },
+      { time: 16, line: 'Built a home and watched it burn',     next: 'I didn\'t want to leave you' },
+      { time: 21, line: 'I didn\'t want to leave you',          next: 'I didn\'t want to lie' },
+      { time: 26, line: 'I didn\'t want to lie',                next: 'Started to cry but then remembered I' },
+      { time: 31, line: 'Started to cry but then remembered I', next: 'I can buy myself flowers' },
+      { time: 36, line: 'I can buy myself flowers',             next: 'Write my name in the sand' },
+      { time: 41, line: 'Write my name in the sand',            next: 'Talk to myself for hours' },
+      { time: 46, line: 'Talk to myself for hours',             next: 'Say things you don\'t understand' },
+      { time: 51, line: 'Say things you don\'t understand',     next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 21, emoji: '⛽', title: 'Gasolina', artist: 'Daddy Yankee', decade: '2000s',
+    cat: 'funk', lang: 'es', bpm: 104, duration: 60, ytId: '0HZRHRDmlJQ',
+    lyrics: [
+      { time: 0,  line: 'Ella le gusta la gasolina',             next: 'Dame más gasolina' },
+      { time: 5,  line: 'Dame más gasolina',                     next: 'Cómo le encanta la gasolina' },
+      { time: 10, line: 'Cómo le encanta la gasolina',           next: 'Dame más gasolina' },
+      { time: 15, line: 'Dame más gasolina',                     next: 'Oye, pepe, tiene un problema' },
+      { time: 20, line: 'Oye, pepe, tiene un problema',          next: 'Que cuando el DJ para el tema' },
+      { time: 25, line: 'Que cuando el DJ para el tema',         next: 'Ella le gusta que le pongan' },
+      { time: 30, line: 'Ella le gusta que le pongan',           next: 'La gasolina' },
+      { time: 35, line: 'La gasolina',                           next: 'Ella le gusta la gasolina' },
+      { time: 40, line: 'Ella le gusta la gasolina',             next: 'Dame más gasolina' },
+      { time: 45, line: 'Dame más gasolina',                     next: 'Cómo le encanta la gasolina' },
+      { time: 50, line: 'Cómo le encanta la gasolina',           next: '' },
+      { time: 56, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 22, emoji: '🙏', title: "My Hope Don't Lie", artist: 'Tasha Layton', decade: '2020s',
+    cat: 'pop', lang: 'en', bpm: 76, duration: 60, ytId: 'pkbMFXKdXM4',
+    lyrics: [
+      { time: 0,  line: 'When the darkness feels like it\'s closing in', next: 'And the weight of the world won\'t let you win' },
+      { time: 6,  line: 'And the weight of the world won\'t let you win', next: 'I will lift my eyes to the hills' },
+      { time: 12, line: 'I will lift my eyes to the hills',      next: 'Where does my help come from' },
+      { time: 17, line: 'Where does my help come from',          next: 'My help comes from the Lord' },
+      { time: 22, line: 'My help comes from the Lord',           next: 'The maker of heaven and earth' },
+      { time: 27, line: 'The maker of heaven and earth',         next: 'My hope don\'t lie in the mountaintop' },
+      { time: 33, line: 'My hope don\'t lie in the mountaintop', next: 'My hope don\'t die when the hard times come' },
+      { time: 39, line: 'My hope don\'t die when the hard times come', next: 'My hope don\'t live in a fleeting feeling' },
+      { time: 45, line: 'My hope don\'t live in a fleeting feeling', next: 'My hope is built on the solid ground' },
+      { time: 51, line: 'My hope is built on the solid ground',  next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 23, emoji: '💃', title: 'Macarena', artist: 'Los Del Rio', decade: '90s',
+    cat: 'pop', lang: 'es', bpm: 103, duration: 60, ytId: 'HVJ4_Nl0y7A',
+    lyrics: [
+      { time: 0,  line: 'Dale a tu cuerpo alegría Macarena', next: 'Que tu cuerpo es pa\' darle alegría y cosa buena' },
+      { time: 6,  line: 'Que tu cuerpo es pa\' darle alegría y cosa buena', next: 'Dale a tu cuerpo alegría Macarena' },
+      { time: 12, line: 'Dale a tu cuerpo alegría Macarena',     next: 'Hey Macarena, ay' },
+      { time: 17, line: 'Hey Macarena, ay',                      next: 'Macarena tiene un novio que se llama' },
+      { time: 22, line: 'Macarena tiene un novio que se llama',  next: 'Que se llama de apellido Vitorino' },
+      { time: 27, line: 'Que se llama de apellido Vitorino',     next: 'Y en la jura de bandera del muchacho' },
+      { time: 32, line: 'Y en la jura de bandera del muchacho',  next: 'Se la dio con dos amigos, ay' },
+      { time: 37, line: 'Se la dio con dos amigos, ay',          next: 'Dale a tu cuerpo alegría Macarena' },
+      { time: 42, line: 'Dale a tu cuerpo alegría Macarena',     next: 'Que tu cuerpo es pa\' darle alegría y cosa buena' },
+      { time: 48, line: 'Que tu cuerpo es pa\' darle alegría y cosa buena', next: 'Hey Macarena, ay' },
+      { time: 54, line: 'Hey Macarena, ay',                      next: '' },
+      { time: 58, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 24, emoji: '💃', title: 'Evidências', artist: 'Chitãozinho & Xororó', decade: '90s',
+    cat: 'sertanejo', lang: 'pt', bpm: 80, duration: 60, ytId: 'NJhCvXWXlmU',
+    lyrics: [
+      { time: 0,  line: 'Eu preparei tudo pra você',             next: 'Me fiz de forte e fingi que tava bem' },
+      { time: 5,  line: 'Me fiz de forte e fingi que tava bem',  next: 'Porque eu achei que esquecendo você' },
+      { time: 10, line: 'Porque eu achei que esquecendo você',   next: 'Minha vida ia ser melhor' },
+      { time: 15, line: 'Mas quando a noite chegou',             next: 'Me trouxe a solidão' },
+      { time: 20, line: 'Me trouxe a solidão',                   next: 'E a sua falta começou a me matar de dor' },
+      { time: 26, line: 'E a sua falta começou a me matar de dor', next: 'Isso é evidência do meu amor' },
+      { time: 32, line: 'Isso é evidência do meu amor',          next: 'Te quero mais do que tudo' },
+      { time: 37, line: 'Te quero mais do que tudo',             next: 'Te amo perdidamente' },
+      { time: 42, line: 'Te amo perdidamente',                   next: 'De um jeito diferente que nunca amei ninguém' },
+      { time: 48, line: 'De um jeito diferente que nunca amei ninguém', next: '' },
+      { time: 55, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 25, emoji: '🔥', title: 'Vai Malandra', artist: 'MC Zaac & Maejor', decade: '2010s',
+    cat: 'funk', lang: 'pt', bpm: 130, duration: 60, ytId: 'lFxDMHJSJlM',
+    lyrics: [
+      { time: 0,  line: 'Vai malandra vai',                      next: 'Mexe malandra mexe' },
+      { time: 5,  line: 'Mexe malandra mexe',                    next: 'Vai malandra vai' },
+      { time: 10, line: 'Meu boy tá doente',                     next: 'Febre de quarenta' },
+      { time: 15, line: 'Febre de quarenta',                     next: 'É de malandra mesmo' },
+      { time: 20, line: 'É de malandra mesmo',                   next: 'Vai malandra vai' },
+      { time: 25, line: 'Vai malandra vai',                      next: 'Mexe, mexe, mexe' },
+      { time: 30, line: 'Mexe, mexe, mexe',                      next: 'Vai malandra vai' },
+      { time: 35, line: 'Que a noite vai rolar',                 next: 'Só pra nós dois' },
+      { time: 40, line: 'Só pra nós dois',                       next: 'Vai malandra vai' },
+      { time: 45, line: 'Vai malandra vai',                      next: '' },
+      { time: 52, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+  {
+    id: 26, emoji: '🌊', title: 'Aquarela', artist: 'Toquinho', decade: '90s',
+    cat: 'pop', lang: 'pt', bpm: 72, duration: 60, ytId: 'bJYjsAMiMOQ',
+    lyrics: [
+      { time: 0,  line: 'Numa folha qualquer eu desenho um sol amarelo', next: 'E com cinco ou seis retas é fácil fazer um castelo' },
+      { time: 7,  line: 'E com cinco ou seis retas é fácil fazer um castelo', next: 'Corro o lápis em torno da mão e me dou uma luva' },
+      { time: 14, line: 'Corro o lápis em torno da mão e me dou uma luva', next: 'E se chove com sol, por que não, faço uma carruagem' },
+      { time: 21, line: 'E se chove com sol, por que não, faço uma carruagem', next: 'Uma casa, uma árvore, um cachorro' },
+      { time: 27, line: 'Uma casa, uma árvore, um cachorro',     next: 'Um palhaço e uma borboleta' },
+      { time: 33, line: 'Um palhaço e uma borboleta',            next: 'Numa folha em branco é fácil assim voar' },
+      { time: 39, line: 'Numa folha em branco é fácil assim voar', next: 'Azul, que é a cor do céu' },
+      { time: 45, line: 'Azul, que é a cor do céu',              next: 'Azul, como a saudade que sinto' },
+      { time: 51, line: 'Azul, como a saudade que sinto',        next: '' },
+      { time: 57, line: '🎤 FIM DA MÚSICA 🎤',                   next: '' },
+    ]
+  },
+];
+
+// ============ STATE ============
+let currentSong = null;
+let isPlaying = false;
+let isMicOn = true;
+let score = 0;
+let currentLyricIdx = 0;
+let wordIdx = 0;
+let gameTimer = null;
+let elapsed = 0;
+let currentCat = 'all';
+let pitchInterval = null;
+let syncOffset = 0; // seconds to shift lyrics forward/back
+
+function adjustSync(delta) {
+  syncOffset += delta;
+  document.getElementById('syncVal').textContent = (syncOffset > 0 ? '+' : '') + syncOffset + 's';
+  // Seek the YouTube video by delta seconds
+  if (ytReady && ytPlayer && ytPlayer.getCurrentTime) {
+    try {
+      const current = ytPlayer.getCurrentTime();
+      ytPlayer.seekTo(Math.max(0, current - delta), true);
+    } catch(e) {}
+  }
+}
+
+
+let ytPlayer = null;
+let ytReady = false;
+
+// Load YouTube IFrame API
+const ytScript = document.createElement('script');
+ytScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytScript);
+
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('ytPlayer', {
+    height: '1', width: '1',
+    playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0 },
+    events: {
+      onReady: () => { ytReady = true; },
+      onStateChange: (e) => {
+        // If video ends naturally, sync our timer
+        if (e.data === YT.PlayerState.ENDED && isPlaying) endGame();
+      }
+    }
+  });
+}
+
+function ytLoad(videoId, startSeconds) {
+  if (!ytReady || !ytPlayer) return;
+  ytPlayer.loadVideoById({ videoId, startSeconds: startSeconds || 0 });
+  ytPlayer.pauseVideo();
+}
+
+function ytPlay() {
+  if (!ytReady || !ytPlayer) return;
+  try { ytPlayer.playVideo(); } catch(e) {}
+}
+
+function ytPause() {
+  if (!ytReady || !ytPlayer) return;
+  try { ytPlayer.pauseVideo(); } catch(e) {}
+}
+
+function ytStop() {
+  if (!ytReady || !ytPlayer) return;
+  try { ytPlayer.stopVideo(); } catch(e) {}
+}
+
+
+let audioCtx = null;
+let analyser = null;
+let micStream = null;
+let micSource = null;
+let animFrameId = null;
+let micVolume = 0;
+let micAvailable = false;
+
+async function startMic() {
+  // Check if getUserMedia is supported
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showMicMsg('🎤 Microfone não suportado neste dispositivo — usando simulação');
+    startPitchSim();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    micStream = stream;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    micSource = audioCtx.createMediaStreamSource(stream);
+    micSource.connect(analyser);
+    micAvailable = true;
+    isMicOn = true;
+    updateMicVisuals();
+    document.getElementById('micBtn').textContent = '🎤';
+    document.getElementById('micBtn').classList.remove('muted');
+    hideMicMsg();
+  } catch (e) {
+    micAvailable = false;
+    isMicOn = false;
+    document.getElementById('micBtn').textContent = '🔇';
+    document.getElementById('micBtn').classList.add('muted');
+    if (e.name === 'NotAllowedError') {
+      showMicMsg('🚫 Permissão de microfone negada — cante mesmo assim, a pontuação é automática!');
+    } else {
+      showMicMsg('🎤 Microfone indisponível — pontuação automática ativada!');
+    }
+    startPitchSim();
+  }
+}
+
+function showMicMsg(msg) {
+  let el = document.getElementById('micMsg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'micMsg';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);font-size:0.75rem;padding:8px 16px;border-radius:50px;z-index:999;text-align:center;max-width:90vw;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(hideMicMsg, 5000);
+}
+function hideMicMsg() {
+  const el = document.getElementById('micMsg');
+  if (el) el.style.display = 'none';
+}
+
+function updateMicVisuals() {
+  if (!analyser) return;
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  function loop() {
+    animFrameId = requestAnimationFrame(loop);
+    analyser.getByteFrequencyData(dataArray);
+
+    // Calculate volume (RMS)
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i] * dataArray[i];
+    const rms = Math.sqrt(sum / dataArray.length);
+    micVolume = Math.min(100, (rms / 128) * 100);
+
+    // Update pitch bars
+    const pct = micVolume;
+    document.getElementById('pitchFill').style.height = pct + '%';
+    document.getElementById('pitchFill2').style.height = pct + '%';
+
+    // Update visualizer bars with real frequency data
+    const bars = document.querySelectorAll('#bars .bar');
+    const step = Math.floor(dataArray.length / bars.length);
+    bars.forEach((bar, i) => {
+      const val = dataArray[i * step] || 0;
+      const h = Math.max(4, (val / 255) * 48);
+      bar.style.height = h + 'px';
+      bar.style.animation = 'none'; // disable CSS anim, use real data
+    });
+
+    // Score based on volume when playing
+    if (isPlaying && isMicOn && micVolume > 15) {
+      // Bonus points for singing (detected by volume)
+    }
+  }
+  loop();
+}
+
+function stopMic() {
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  analyser = null;
+  micSource = null;
+  micVolume = 0;
+  document.getElementById('pitchFill').style.height = '5%';
+  document.getElementById('pitchFill2').style.height = '5%';
+  // Reset bars
+  document.querySelectorAll('#bars .bar').forEach(b => {
+    b.style.height = '';
+    b.style.animation = '';
+  });
+}
+
+// ============ MENU ============
+function renderSongs(songs) {
+  const grid = document.getElementById('songGrid');
+  if (songs.length === 0) {
+    grid.innerHTML = '<div style="color:rgba(255,255,255,0.3);text-align:center;padding:40px;">Nenhuma música encontrada 🎵</div>';
+    return;
+  }
+  const langFlag = { en: '🇺🇸', pt: '🇧🇷', es: '🇪🇸' };
+  const langLabel = { en: 'English', pt: 'Português', es: 'Español' };
+  grid.innerHTML = songs.map(s => `
+    <div class="song-card" onclick="selectSong(${s.id})">
+      <span class="song-emoji">${s.emoji}</span>
+      <div class="song-info">
+        <div class="song-title">${s.title}</div>
+        <div class="song-artist">${s.artist}</div>
+        <div class="song-meta">
+          <span class="song-tag">${langFlag[s.lang] || ''} ${langLabel[s.lang] || ''}</span>
+          <span class="song-tag">${s.cat}</span>
+          <span class="song-tag">${s.decade}</span>
+        </div>
+      </div>
+      <span class="song-play-icon">▶</span>
+    </div>
+  `).join('');
+}
+
+let currentDecade = null;
+let currentLang = null;
+
+function filterAll(btn) {
+  currentCat = 'all';
+  currentDecade = null;
+  currentLang = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  currentDecade = null;
+  currentLang = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterLang(lang, btn) {
+  currentLang = lang;
+  currentCat = 'all';
+  currentDecade = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterDecade(decade, btn) {
+  currentDecade = decade;
+  currentCat = 'all';
+  currentLang = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterSongs() { applyFilters(); }
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let songs = SONGS;
+  if (currentLang) songs = songs.filter(s => s.lang === currentLang);
+  else if (currentDecade) songs = songs.filter(s => s.decade === currentDecade);
+  else if (currentCat !== 'all') songs = songs.filter(s => s.cat === currentCat);
+  if (q) songs = songs.filter(s => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q));
+  renderSongs(songs);
+}
+
+// ============ SONG SELECT ============
+function selectSong(id) {
+  currentSong = SONGS.find(s => s.id === id);
+  syncOffset = 0;
+  resetGame();
+  showScreen('game');
+  document.getElementById('gameSongTitle').textContent = currentSong.title;
+  document.getElementById('gameSongArtist').textContent = currentSong.artist;
+  document.getElementById('syncVal').textContent = '0s';
+  renderLyric();
+  // Pre-load the YouTube video
+  if (currentSong.ytId) ytLoad(currentSong.ytId, currentSong.ytStart || 0);
+}
+
+// ============ GAME ============
+function resetGame() {
+  score = 0;
+  currentLyricIdx = 0;
+  wordIdx = 0;
+  elapsed = 0;
+  isPlaying = false;
+  document.getElementById('scoreVal').textContent = '0';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('playPauseBtn').textContent = '▶ Iniciar';
+  document.getElementById('vinyl').classList.remove('playing');
+  document.getElementById('bars').classList.add('paused');
+  updateStars();
+  updateTimerRing(currentSong ? currentSong.duration : 60, 0);
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+  ytStop();
+}
+
+function togglePlay() {
+  if (!isPlaying) {
+    startCountdown(async () => {
+      isPlaying = true;
+      document.getElementById('playPauseBtn').textContent = '⏸ Pausar';
+      document.getElementById('vinyl').classList.add('playing');
+      document.getElementById('bars').classList.remove('paused');
+      ytPlay(); // 🎵 Play real music!
+      if (!micStream) await startMic();
+      gameTimer = setInterval(tick, 250);
+    });
+  } else {
+    isPlaying = false;
+    document.getElementById('playPauseBtn').textContent = '▶ Continuar';
+    document.getElementById('vinyl').classList.remove('playing');
+    document.getElementById('bars').classList.add('paused');
+    ytPause();
+    if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+  }
+}
+
+function tick() {
+  // Use YouTube's real current time so lyrics always stay in sync
+  let ytTime = 0;
+  try {
+    if (ytReady && ytPlayer && ytPlayer.getCurrentTime) {
+      ytTime = ytPlayer.getCurrentTime() - (currentSong.ytStart || 0);
+    } else {
+      elapsed += 0.5;
+      ytTime = elapsed;
+    }
+  } catch(e) {
+    elapsed += 0.5;
+    ytTime = elapsed;
+  }
+  elapsed = ytTime + syncOffset;
+
+  const dur = currentSong.duration;
+  document.getElementById('progressFill').style.width = Math.min(100, (elapsed / dur * 100)) + '%';
+  updateTimerRing(dur, elapsed);
+
+  // Advance lyrics
+  const lyrics = currentSong.lyrics;
+  if (currentLyricIdx < lyrics.length - 1) {
+    if (elapsed >= lyrics[currentLyricIdx + 1].time) {
+      currentLyricIdx++;
+      wordIdx = 0;
+      renderLyric();
+    } else {
+      // Advance words within current line
+      const words = lyrics[currentLyricIdx].line.split(' ');
+      const timeInLine = elapsed - lyrics[currentLyricIdx].time;
+      const nextTime = lyrics[currentLyricIdx + 1].time;
+      const lineDur = nextTime - lyrics[currentLyricIdx].time;
+      const newWordIdx = Math.min(words.length - 1, Math.floor((timeInLine / lineDur) * words.length));
+      if (newWordIdx !== wordIdx) {
+        wordIdx = newWordIdx;
+        updateWordHighlight();
+        addScore(Math.floor(Math.random() * 80) + 40);
+      }
+    }
+  }
+
+  if (elapsed >= dur) {
+    endGame();
+  }
+}
+
+function renderLyric() {
+  const lyrics = currentSong.lyrics;
+  const curr = lyrics[currentLyricIdx];
+  const prev = currentLyricIdx > 0 ? lyrics[currentLyricIdx - 1].line : '';
+
+  document.getElementById('lyricPrev').textContent = prev;
+  document.getElementById('lyricNext').textContent = curr.next;
+
+  const words = curr.line.split(' ');
+  document.getElementById('lyricCurrent').innerHTML = words
+    .map((w, i) => `<span class="lyric-word" id="word-${i}">${w}</span>`)
+    .join('');
+  wordIdx = 0;
+}
+
+function updateWordHighlight() {
+  const words = currentSong.lyrics[currentLyricIdx].line.split(' ');
+  words.forEach((_, i) => {
+    const el = document.getElementById('word-' + i);
+    if (!el) return;
+    if (i < wordIdx) el.className = 'lyric-word sung';
+    else if (i === wordIdx) el.className = 'lyric-word active';
+    else el.className = 'lyric-word';
+  });
+}
+
+function addScore(pts) {
+  // Bonus if mic is active and user is singing
+  let bonus = 1;
+  if (isMicOn && micVolume > 20) bonus = 1 + (micVolume / 100) * 0.8;
+  score += Math.floor(pts * bonus);
+  document.getElementById('scoreVal').textContent = score;
+  updateStars();
+  if (Math.random() > 0.7) showNoteFeedback();
+}
+
+function updateStars() {
+  const pct = score / 3000;
+  let stars = '⭐';
+  if (pct > 0.2) stars = '⭐⭐';
+  if (pct > 0.4) stars = '⭐⭐⭐';
+  if (pct > 0.6) stars = '⭐⭐⭐⭐';
+  if (pct > 0.8) stars = '⭐⭐⭐⭐⭐';
+  document.getElementById('starsDisplay').textContent = stars;
+}
+
+function showNoteFeedback() {
+  const words = ['PERFEITO!', 'INCRÍVEL!', 'SHOW!', '🔥', 'ARRASOU!', 'NOTA 10!'];
+  const colors = ['#ffe600', '#ff2d78', '#00f5ff', '#bf00ff', '#ff6b35'];
+  const el = document.createElement('div');
+  el.className = 'note-feedback';
+  el.textContent = words[Math.floor(Math.random() * words.length)];
+  el.style.color = colors[Math.floor(Math.random() * colors.length)];
+  el.style.left = (20 + Math.random() * 60) + '%';
+  el.style.top = (20 + Math.random() * 40) + '%';
+  document.getElementById('lyricsStage').appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// Fallback pitch simulation (when mic not available)
+function startPitchSim() {
+  pitchInterval = setInterval(() => {
+    const h = 20 + Math.random() * 75;
+    document.getElementById('pitchFill').style.height = h + '%';
+    document.getElementById('pitchFill2').style.height = h + '%';
+  }, 150);
+}
+function stopPitchSim() {
+  if (pitchInterval) { clearInterval(pitchInterval); pitchInterval = null; }
+  document.getElementById('pitchFill').style.height = '10%';
+  document.getElementById('pitchFill2').style.height = '10%';
+}
+
+function updateTimerRing(dur, el) {
+  const remaining = Math.max(0, dur - el);
+  const pct = remaining / dur;
+  const circ = 125.6;
+  document.getElementById('timerRing').style.strokeDashoffset = circ * (1 - pct);
+  document.getElementById('timerText').textContent = Math.ceil(remaining);
+}
+
+async function toggleMic() {
+  if (isMicOn && micAvailable) {
+    stopMic();
+    isMicOn = false;
+    micAvailable = false;
+    document.getElementById('micBtn').textContent = '🔇';
+    document.getElementById('micBtn').classList.add('muted');
+    startPitchSim();
+  } else {
+    stopPitchSim();
+    document.getElementById('bars').classList.remove('paused');
+    await startMic();
+  }
+}
+
+function restartSong() {
+  if (gameTimer) clearInterval(gameTimer);
+  ytStop();
+  stopMic();
+  stopPitchSim();
+  resetGame();
+  renderLyric();
+  if (currentSong && currentSong.ytId) ytLoad(currentSong.ytId, currentSong.ytStart || 0);
+}
+
+function endGame() {
+  if (gameTimer) clearInterval(gameTimer);
+  ytStop();
+  stopMic();
+  stopPitchSim();
+  isPlaying = false;
+  showResult();
+}
+
+// ============ RESULT ============
+function showResult() {
+  const pct = score / 3000;
+  let grade, msg, stars;
+  if (pct > 0.9) { grade = 'S+'; stars = '⭐⭐⭐⭐⭐'; msg = '🔥 Você é uma estrela! Sensacional!'; }
+  else if (pct > 0.75) { grade = 'A+'; stars = '⭐⭐⭐⭐⭐'; msg = '🎤 Incrível! Você arrasou!'; }
+  else if (pct > 0.6) { grade = 'A'; stars = '⭐⭐⭐⭐'; msg = '🌟 Muito bom! Continue assim!'; }
+  else if (pct > 0.4) { grade = 'B'; stars = '⭐⭐⭐'; msg = '👏 Bom desempenho! Pratique mais!'; }
+  else if (pct > 0.2) { grade = 'C'; stars = '⭐⭐'; msg = '💪 Não desista! Pode melhorar!'; }
+  else { grade = 'D'; stars = '⭐'; msg = '🎵 Continue praticando!'; }
+
+  document.getElementById('resultGrade').textContent = grade;
+  document.getElementById('resultStars').textContent = stars;
+  document.getElementById('resultScore').textContent = score + ' pts';
+  document.getElementById('resultMsg').textContent = msg;
+
+  showScreen('result');
+
+  if (pct > 0.5) spawnFireworks();
+}
+
+function spawnFireworks() {
+  const colors = ['#ff2d78', '#00f5ff', '#ffe600', '#bf00ff', '#fff'];
+  for (let burst = 0; burst < 5; burst++) {
+    setTimeout(() => {
+      const cx = 20 + Math.random() * 60;
+      const cy = 20 + Math.random() * 60;
+      for (let i = 0; i < 12; i++) {
+        const fw = document.createElement('div');
+        fw.className = 'firework';
+        fw.style.left = cx + 'vw';
+        fw.style.top = cy + 'vh';
+        fw.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const angle = (i / 12) * 2 * Math.PI;
+        const dist = 40 + Math.random() * 60;
+        fw.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+        fw.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(fw);
+        setTimeout(() => fw.remove(), 1000);
+      }
+    }, burst * 400);
+  }
+}
+
+function restartFromResult() {
+  resetGame();
+  renderLyric();
+  showScreen('game');
+  if (currentSong && currentSong.ytId) ytLoad(currentSong.ytId, currentSong.ytStart || 0);
+}
+
+// ============ COUNTDOWN ============
+function startCountdown(cb) {
+  const el = document.getElementById('countdown');
+  const num = document.getElementById('countdownNum');
+  el.style.display = 'flex';
+  let n = 3;
+  num.textContent = n;
+
+  const cd = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(cd);
+      el.style.display = 'none';
+      cb();
+    } else {
+      num.textContent = n;
+      num.style.animation = 'none';
+      void num.offsetWidth;
+      num.style.animation = 'cdPop 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    }
+  }, 1000);
+}
+
+// ============ NAVIGATION ============
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  el.classList.add('active');
+}
+
+function goToMenu() {
+  if (gameTimer) clearInterval(gameTimer);
+  ytStop();
+  stopMic();
+  stopPitchSim();
+  resetGame();
+  showScreen('menu');
+}
+
+// ============ INIT ============
+renderSongs(SONGS);
+showScreen('menu');
+</script>
+</body>
+</html>
